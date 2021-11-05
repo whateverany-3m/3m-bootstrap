@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
+    - name: build
+      uses: actions/checkout@v2
       run: make build
       env:
         SOURCE_GROUP: '/'
@@ -27,5 +27,4 @@ jobs:
         TARGET_REGISTRY: 'github.com'
         TARGET_VERSION: '0.0.0'
         _DOCKER_HOME: '.docker'
-      with:
-        variableName: SOURCE_GROUP SOURCE_IMAGE SOURCE_REGISTRY SOURCE_VERSION TARGET_BUILD TARGET_GROUP TARGET_IMAGE TARGET_REGISTRY TARGET_VERSION _DOCKER_HOME
+
