@@ -13,7 +13,7 @@ jobs:
     - name: env
       run: |
         set -x
-        grep "=" ".env.template" | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" >> "${GITHUB_ENV}"
+        grep "=" ".env.template" | sed -e '/^#/d;/^\s*$/d' >> "${GITHUB_ENV}"
         #
         echo "TARGET_VERSION=$(echo ${GITHUB_REF:10})" >> $GITHUB_ENV
         echo "TARGET_BUILD=${{ github.run_number }}" >> $GITHUB_ENV
