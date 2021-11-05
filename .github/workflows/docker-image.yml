@@ -10,12 +10,12 @@ env:
   SOURCE_REGISTRY: 'docker.io'
   SOURCE_VERSION: '20.10.10-dind-rootless'
   TARGET_BUILD: ${{ github.run_number }}
-  TARGET_GROUP: '/whateverany'
+  TARGET_GROUP: '/whateverany/'
   TARGET_IMAGE: '3m-docker'
   TARGET_REGISTRY: 'docker.pkg.github.com'
   TARGET_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TARGET_REGISTRY_USER: ${{ github.actor }}
-  TARGET_VERSION: ${{ github.ref }}
+  TARGET_VERSION: ${{ steps.get_version.outputs.version }}
   _DOCKER_HOME: '.docker'
 
 jobs:
