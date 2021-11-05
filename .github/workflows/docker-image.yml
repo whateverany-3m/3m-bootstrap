@@ -6,6 +6,18 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  SOURCE_GROUP: '/'
+  SOURCE_IMAGE: 'docker'
+  SOURCE_REGISTRY: 'docker.io'
+  SOURCE_VERSION: '20.10.10-dind-rootless'
+  TARGET_BUILD: '0'
+  TARGET_GROUP: '/whateverany'
+  TARGET_IMAGE: '3m-docker'
+  TARGET_REGISTRY: 'github.com'
+  TARGET_VERSION: '0.0.0'
+  _DOCKER_HOME: '.docker'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,14 +26,3 @@ jobs:
       uses: actions/checkout@v2
     - name: build
       run: make build
-      env:
-        SOURCE_GROUP: '/'
-        SOURCE_IMAGE: 'docker'
-        SOURCE_REGISTRY: 'docker.io'
-        SOURCE_VERSION: '20.10.10-dind-rootless'
-        TARGET_BUILD: '0'
-        TARGET_GROUP: '/whateverany'
-        TARGET_IMAGE: '3m-docker'
-        TARGET_REGISTRY: 'github.com'
-        TARGET_VERSION: '0.0.0'
-        _DOCKER_HOME: '.docker'
