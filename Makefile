@@ -27,7 +27,7 @@ publish: .env
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
 .PHONY: publish
 
-logout .env
+logout: .env
 	docker logout "${TARGET_REGISTRY}"
 .PHONY: logout
 
