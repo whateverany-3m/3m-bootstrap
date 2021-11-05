@@ -15,7 +15,7 @@ env:
   TARGET_REGISTRY: 'docker.pkg.github.com'
   TARGET_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TARGET_REGISTRY_USER: ${{ github.actor }}
-  TARGET_VERSION: ${{ steps.get_version.outputs.version }}
+  TARGET_VERSION: ${GITHUB_REF/refs\/tags\//}
   _DOCKER_HOME: '.docker'
 
 jobs:
