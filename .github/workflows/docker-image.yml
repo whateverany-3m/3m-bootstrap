@@ -24,7 +24,11 @@ jobs:
     - name: checkout
       uses: actions/checkout@v2
     - name: env
-      run: echo "TARGET_VERSION=$(echo ${GITHUB_REF::10})" >> $GITHUB_ENV
+      run: |
+        echo "TARGET_VERSION=$(echo ${GITHUB_REF::10})" >> $GITHUB_ENV
+        echo "INFO: TARGET_VERSION=${TARGET_VERSION}"
+        echo "INFO: GITHUB_ENV:"
+        cat "${GITHUB_ENV}"
     - name: build
       run: make build
     - name: login
