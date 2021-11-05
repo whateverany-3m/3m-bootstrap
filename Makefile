@@ -19,13 +19,17 @@ build: .env env-SOURCE_GROUP
 .PHONY: build
 
 login: .env
-	echo "${TARGET_REGISTRY_TOKEN}" | docker login docker.pkg.github.com -u ${TARGET_REGISTRY_USER} --password-stdin
+	docker login --username ${TARGET_REGISTRY_USER} --password "${TARGET_REGISTRY_TOKEN}"  "${TARGET_REGISTRY}"
 .PHONY: login
 
 publish: .env
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
 .PHONY: publish
+
+logout .env
+	docker logout "${TARGET_REGISTRY}"
+.PHONY: logout
 
 shell: .env
 	$(DOCKER_COMPOSE_RUN) 3m /bin/sh

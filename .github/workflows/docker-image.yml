@@ -11,13 +11,13 @@ env:
   SOURCE_IMAGE: 'docker'
   SOURCE_REGISTRY: 'docker.io'
   SOURCE_VERSION: '20.10.10-dind-rootless'
-  TARGET_BUILD: '0'
+  TARGET_BUILD: ${{ github.run_number }}
   TARGET_GROUP: '/whateverany'
   TARGET_IMAGE: '3m-docker'
-  TARGET_REGISTRY: 'github.com'
+  TARGET_REGISTRY: 'docker.pkg.github.com'
   TARGET_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TARGET_REGISTRY_USER: ${{ github.actor }}
-  TARGET_VERSION: '0.0.0'
+  TARGET_VERSION: ${{ github.ref }}
   _DOCKER_HOME: '.docker'
 
 jobs:
@@ -30,4 +30,8 @@ jobs:
       run: make build
     - name: login
       run: make login
+    - name: publish
+      run: make publish
+    - name: logout
+      run: make logout
 
