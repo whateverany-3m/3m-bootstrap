@@ -5,17 +5,6 @@ on:
       - '*'
 
 env:
-  SOURCE_GROUP: '/'
-  SOURCE_IMAGE: 'docker'
-  SOURCE_REGISTRY: 'docker.io'
-  SOURCE_VERSION: '20.10.10-dind-rootless'
-  TARGET_BUILD: ${{ github.run_number }}
-  TARGET_GROUP: '/whateverany/'
-  TARGET_IMAGE: '3m-docker'
-  TARGET_REGISTRY: 'docker.pkg.github.com'
-  TARGET_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  TARGET_REGISTRY_USER: ${{ github.actor }}
-  _DOCKER_HOME: '.docker'
 
 jobs:
   build:
@@ -26,14 +15,19 @@ jobs:
     - name: env
       run: |
         set -x
+        grep "=" ".env.template" | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" >> "${GITHUB_ENV}"
+        #
         echo "TARGET_VERSION=$(echo ${GITHUB_REF:10})" >> $GITHUB_ENV
-        echo "INFO: TARGET_VERSION=${TARGET_VERSION}"
+        echo "TARGET_BUILD=${{ github.run_number }}" >> $GITHUB_ENV
+        echo "TARGET_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+        echo "TARGET_REGISTRY_USER=${{ github.actor }}" >> $GITHUB_ENV
+        #
         echo "INFO: GITHUB_ENV:"
         cat "${GITHUB_ENV}"
-    - name: build
-      run: make build
     - name: login
       run: make login
+    - name: build
+      run: make build
     - name: publish
       run: make publish
     - name: logout
