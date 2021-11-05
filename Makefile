@@ -6,7 +6,6 @@ TARGET_SEMANTIC_RC := $(TARGET_SEMANTIC_VERSION)-rc.$(TARGET_BUILD)
 ENVFILE := .env
 
 build: .env env-SOURCE_GROUP
-	set -x
 	/usr/bin/docker build \
 		--no-cache \
 	  --build-arg SOURCE_GROUP=$(SOURCE_GROUP) \
@@ -17,7 +16,16 @@ build: .env env-SOURCE_GROUP
 	  --tag $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC) \
 	  --file Dockerfile  \
 	  .
-.PHONY: _build
+.PHONY: build
+
+login: .env
+	echo "${TARGET_REGISTRY_TOKEN}" | docker login docker.pkg.github.com -u ${TARGET_REGISTRY_USER} --password-stdin
+.PHONY: login
+
+publish: .env
+	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
+	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
+.PHONY: publish
 
 shell: .env
 	$(DOCKER_COMPOSE_RUN) 3m /bin/sh
