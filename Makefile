@@ -5,7 +5,7 @@ TARGET_SEMANTIC_VERSION := $(TARGET_VERSION)
 TARGET_SEMANTIC_RC := $(TARGET_SEMANTIC_VERSION)-rc.$(TARGET_BUILD)
 ENVFILE := .env
 
-build: .env env-SOURCE_GROUP
+build: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE_VERSION env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_RESISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
 	/usr/bin/docker build \
 		--no-cache \
 	  --build-arg SOURCE_GROUP=$(SOURCE_GROUP) \
@@ -18,28 +18,28 @@ build: .env env-SOURCE_GROUP
 	  .
 .PHONY: build
 
-login: .env
+login: .env env-TARGET_RESISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTRY_USER
 	docker login --username ${TARGET_REGISTRY_USER} --password "${TARGET_REGISTRY_TOKEN}"  "${TARGET_REGISTRY}"
 .PHONY: login
 
-publish: .env
+publish: .env env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_RESISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
 .PHONY: publish
 
-logout: .env
+logout: .env env-TARGET_RESISTRY
 	docker logout "${TARGET_REGISTRY}"
 .PHONY: logout
 
-shell: .env
+shell: .env env-DOCKER_COMPOSE_RUN
 	$(DOCKER_COMPOSE_RUN) 3m /bin/sh
 .PHONY: shell
 
-shell-root: .env
+shell-root: .env env-DOCKER_COMPOSE_RUN
 	$(DOCKER_COMPOSE_RUN) -u root 3m /bin/sh
 .PHONY: shell-root
 
-.env:
+.env: env-ENVFILE
 	echo $(ENVFILE)
 
 env-%:
