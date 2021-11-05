@@ -15,8 +15,8 @@ env:
   TARGET_GROUP: '/whateverany'
   TARGET_IMAGE: '3m-docker'
   TARGET_REGISTRY: 'github.com'
-  TARGET_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
-  TARGET_REGISTRY_USER=${{ github.actor }}
+  TARGET_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  TARGET_REGISTRY_USER: ${{ github.actor }}
   TARGET_VERSION: '0.0.0'
   _DOCKER_HOME: '.docker'
 
