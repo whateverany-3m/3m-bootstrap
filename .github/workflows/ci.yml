@@ -22,20 +22,16 @@ jobs:
         #
         echo "INFO: GITHUB_ENV:"
         cat "${GITHUB_ENV}"
-    - name: login
+    - name: preaction
       run: |
         set -x
-        make login
-    - name: build
+        make preaction
+    - name: runaction
       run: |
         set -x
-        make build
-    - name: publish
+        make runaction
+    - name: postaction
       run: |
         set -x
-        make publish
-    - name: logout
-      run: |
-        set -x
-        make logout
+        make postaction
 

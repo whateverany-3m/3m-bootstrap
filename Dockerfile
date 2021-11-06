@@ -5,7 +5,7 @@ ARG SOURCE_VERSION
 
 FROM $SOURCE_REGISTRY$SOURCE_GROUP$SOURCE_IMAGE:$SOURCE_VERSION
 
-USER root
+#USER root
 
 COPY src/rootfs/ /
 
@@ -18,4 +18,4 @@ RUN echo "INFO: begin RUN" ;\
   /bin/busybox --install ;\
   echo "INFO: end RUN"
 
-USER rootless
+#USER rootless

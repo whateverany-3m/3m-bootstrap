@@ -5,7 +5,15 @@ TARGET_SEMANTIC_VERSION := $(TARGET_VERSION)
 TARGET_SEMANTIC_RC := $(TARGET_SEMANTIC_VERSION)-rc.$(TARGET_BUILD)
 ENVFILE := .env
 
-build: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE_VERSION env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_RESISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
+preaction: .env env-TARGET_RESISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTRY_USER
+	echo "INFO: Check /var/run/docker.sock"
+	stat /var/run/docker.sock
+	echo "INFO: docker login"
+	docker login --username ${TARGET_REGISTRY_USER} --password "${TARGET_REGISTRY_TOKEN}"  "${TARGET_REGISTRY}"
+.PHONY: preaction
+
+
+runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE_VERSION env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_RESISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
 	/usr/bin/docker build \
 		--no-cache \
 	  --build-arg SOURCE_GROUP=$(SOURCE_GROUP) \
@@ -16,21 +24,15 @@ build: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE_VER
 	  --tag $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION) \
 	  --file Dockerfile  \
 	  .
-.PHONY: build
-
-login: .env env-TARGET_RESISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTRY_USER
-	docker login --username ${TARGET_REGISTRY_USER} --password "${TARGET_REGISTRY_TOKEN}"  "${TARGET_REGISTRY}"
-.PHONY: login
-
-publish: .env env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_RESISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
 	docker images
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
-.PHONY: publish
+.PHONY: runaction
 
-logout: .env env-TARGET_RESISTRY
+postaction: .env env-TARGET_RESISTRY
+	echo "INFO: docker login"
 	docker logout "${TARGET_REGISTRY}"
-.PHONY: logout
+.PHONY: postaction
 
 shell: .env env-DOCKER_COMPOSE_RUN
 	$(DOCKER_COMPOSE_RUN) 3m /bin/sh
