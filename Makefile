@@ -30,7 +30,7 @@ runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_REGISTRY env-SOURCE
 .PHONY: runaction
 
 postaction: .env env-TARGET_REGISTRY
-	echo "INFO: docker logout
+	echo "INFO: docker logout"
 	docker logout "${TARGET_REGISTRY}"
 .PHONY: postaction
 
