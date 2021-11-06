@@ -9,7 +9,7 @@ preaction: .env env-TARGET_RESISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTR
 	echo "INFO: Check /var/run/docker.sock"
 	stat /var/run/docker.sock
 	echo "INFO: docker login"
-	docker login --username ${TARGET_REGISTRY_USER} --password "${TARGET_REGISTRY_TOKEN}"  "${TARGET_REGISTRY}"
+	echo "$(TARGET_REGISTRY_TOKEN)" | docker login --username $(TARGET_REGISTRY_USER) --password-stdin "$(TARGET_REGISTRY)"
 .PHONY: preaction
 
 
@@ -30,7 +30,7 @@ runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE
 .PHONY: runaction
 
 postaction: .env env-TARGET_RESISTRY
-	echo "INFO: docker login"
+	echo "INFO: docker logout
 	docker logout "${TARGET_REGISTRY}"
 .PHONY: postaction
 
