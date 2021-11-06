@@ -5,7 +5,7 @@ TARGET_SEMANTIC_VERSION := $(TARGET_VERSION)
 TARGET_SEMANTIC_RC := $(TARGET_SEMANTIC_VERSION)-rc.$(TARGET_BUILD)
 ENVFILE := .env
 
-preaction: .env env-TARGET_RESISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTRY_USER
+preaction: .env env-TARGET_REGISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTRY_USER
 	echo "INFO: Check /var/run/docker.sock"
 	stat /var/run/docker.sock
 	echo "INFO: docker login"
@@ -13,7 +13,7 @@ preaction: .env env-TARGET_RESISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTR
 .PHONY: preaction
 
 
-runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE_VERSION env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_RESISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
+runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_REGISTRY env-SOURCE_VERSION env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_REGISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
 	/usr/bin/docker build \
 		--no-cache \
 	  --build-arg SOURCE_GROUP=$(SOURCE_GROUP) \
@@ -29,7 +29,7 @@ runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_RESISTRY env-SOURCE
 	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
 .PHONY: runaction
 
-postaction: .env env-TARGET_RESISTRY
+postaction: .env env-TARGET_REGISTRY
 	echo "INFO: docker logout
 	docker logout "${TARGET_REGISTRY}"
 .PHONY: postaction
@@ -46,5 +46,6 @@ shell-root: .env env-DOCKER_COMPOSE_RUN
 	echo $(ENVFILE)
 
 env-%:
-	echo "INFO: Check if $* is not empty"
+	if [ "${$*}" = "" ] ; then echo "ERROR: $* is not set"; exit 1; fi
+	echo "INFO: $*=${$*}"
 
