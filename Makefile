@@ -1,51 +1,95 @@
-DOCKER_COMPOSE_RUN := docker-compose run --rm
-BUILD ?= 0
-VERSION := 0.0.0
-TARGET_SEMANTIC_VERSION := $(TARGET_VERSION)
-TARGET_SEMANTIC_RC := $(TARGET_SEMANTIC_VERSION)-rc.$(TARGET_BUILD)
-ENVFILE := .env
+DOCKER_COMPOSE_RUN ?= docker-compose run --rm
+DOCKER_COMPOSE_SHELLS ?= 3m-root-/bin/sh lint-root-/bin/bash source-root-/bin/sh target-root-/bin/sh
+ENVFILE ?= .env
+TARGET_SEMANTIC_VERSION ?= $(TARGET_VERSION)
+TARGET_SEMANTIC_RC ?= $(TARGET_SEMANTIC_VERSION)-rc.$(TARGET_BUILD)
+TARGET_ENVS ?= TARGET_ENVS=SOURCE_GROUP SOURCE_IMAGE SOURCE_REGISTRY SOURCE_VERSION TARGET_GROUP TARGET_IMAGE TARGET_REGISTRY TARGET_SEMANTIC_RC TARGET_SEMANTIC_VERSION
+#
+DOCKER_COMPOSE_ARGS ?= $(foreach _t,${TARGET_ENVS},-e "$(_t)=$${$(_t)}")
+TARGET_ARGS ?= $(foreach _t,${TARGET_ENVS},--build-arg "$(_t)=$${$(_t)}")
+TARGET_DEPS ?= .env $(foreach _t,${TARGET_ENVS},_env-$(_t) )
 
-preaction: .env env-TARGET_REGISTRY env-TARGET_REGISTRY_TOKEN env-TARGET_REGISTRY_USER
-	echo "INFO: Check /var/run/docker.sock"
-	stat /var/run/docker.sock
-	echo "INFO: docker login"
+preaction: $(TARGET_DEPS)
 	echo "$(TARGET_REGISTRY_TOKEN)" | docker login --username $(TARGET_REGISTRY_USER) --password-stdin "$(TARGET_REGISTRY)"
+	$(DOCKER_COMPOSE_RUN) 3m make _login
 .PHONY: preaction
 
+runaction: $(TARGET_DEPS)
+	$(DOCKER_COMPOSE_RUN) 3m make _login
+	$(DOCKER_COMPOSE_RUN) 3m make _build
+	$(DOCKER_COMPOSE_RUN) lint make _lint
+	$(DOCKER_COMPOSE_RUN) 3m make _publish
+.PHONY: .runaction
 
-runaction: .env env-SOURCE_GROUP env-SOURCE_IMAGE env-SOURCE_REGISTRY env-SOURCE_VERSION env-TARGET_GROUP env-TARGET_IMAGE env-TARGET_REGISTRY env-TARGET_SEMANTIC_RC env-TARGET_SEMANTIC_VERSION
-	/usr/bin/docker build \
-		--no-cache \
-	  --build-arg SOURCE_GROUP=$(SOURCE_GROUP) \
-	  --build-arg SOURCE_REGISTRY=$(SOURCE_REGISTRY) \
-	  --build-arg SOURCE_IMAGE=$(SOURCE_IMAGE) \
-	  --build-arg SOURCE_VERSION=$(SOURCE_VERSION) \
-	  --tag $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC) \
-	  --tag $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION) \
-	  --file Dockerfile  \
-	  .
-	docker images
-	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
-	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
-.PHONY: runaction
-
-postaction: .env env-TARGET_REGISTRY
-	echo "INFO: docker logout"
-	docker logout "${TARGET_REGISTRY}"
+postaction: $(TARGET_DEPS)
+	$(DOCKER_COMPOSE_RUN) 3m make _logout
 .PHONY: postaction
 
-shell: .env env-DOCKER_COMPOSE_RUN
-	$(DOCKER_COMPOSE_RUN) 3m /bin/sh
-.PHONY: shell
+_login:
+	echo "INFO: docker login"
+	echo "$(TARGET_REGISTRY_TOKEN)" | docker login --username $(TARGET_REGISTRY_USER) --password-stdin "$(TARGET_REGISTRY)"
+.PHONY: _login
 
-shell-root: .env env-DOCKER_COMPOSE_RUN
-	$(DOCKER_COMPOSE_RUN) -u root 3m /bin/sh
-.PHONY: shell-root
+_build:
+	echo "INFO: docker build"
+	echo "INFO: TARGET_ARGS=$(TARGET_ARGS)"
+	echo "INFO: TARGET_DEPS=$(TARGET_DEPS)"
+	docker build \
+	  $(TARGET_ARGS) \
+		--no-cache \
+	  --tag $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC) \
+	  --tag $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION) \
+	  --file Dockerfile \
+	  .
+.PHONY: _build
 
-.env: env-ENVFILE
-	echo $(ENVFILE)
+_lint:
+	echo "INFO: _lint"
+.PHONY: _lint
 
-env-%:
-	if [ "${$*}" = "" ] ; then echo "ERROR: $* is not set"; exit 1; fi
-	echo "INFO: $*=${$*}"
+	
+_publish:
+	echo "INFO: docker images"
+	docker images
+	echo "INFO: docker push"
+	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_RC)
+	echo "INFO: docker push"
+	docker push $(TARGET_REGISTRY)$(TARGET_GROUP)$(TARGET_IMAGE):$(TARGET_SEMANTIC_VERSION)
+.PHONY: _publish
+
+_logout:
+	echo "INFO: docker logout"
+	docker logout "$(TARGET_REGISTRY)"
+.PHONY: _logout
+
+###############################################################################
+# Macro to run shells from docker-compose services
+###############################################################################
+define RULE
+shell_$(1): $(TARGET_DEPS)
+	@echo "INFO: TARGET_DEPS=$(TARGET_DEPS)"
+	$(eval DOCKER_COMPOSE_SERVICE = $(word 1,$(subst -, ,$(1)))) \
+	$(eval SHELL_USER = $(word 2,$(subst -, ,$(1)))) \
+	$(eval SERVICE_SHELL = $(word 3,$(subst -, ,$(1)))) \
+	$(DOCKER_COMPOSE_RUN) $(DOCKER_COMPOSE_ARGS) --user $(SHELL_USER) --entrypoint "" $(DOCKER_COMPOSE_SERVICE) $(SERVICE_SHELL)
+.PHONY: $(1)
+endef
+$(foreach _t,$(DOCKER_COMPOSE_SERVICES),$(eval $(call RULE,$(_t))))
+
+_env-%:
+	if [ "${${*}}" = "" ]; then \
+			echo "Environment variable $* not set"; \
+			echo "Please check README.md for variables required"; \
+			exit 1; \
+	fi
+	@echo "INFO: ${*}='${${*}}'";
+.PHONY: _env-%
+
+.env:
+	@echo "INFO: Checking for .env";
+	@ if [ \! -e .env ]; then \
+	  echo "INFO: .env doesn't exist, copying $(ENVFILE)"; \
+	  cp $(ENVFILE) .env; \
+	fi
+.PHONY: .env
 

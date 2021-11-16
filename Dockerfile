@@ -5,11 +5,10 @@ ARG SOURCE_VERSION
 
 FROM $SOURCE_REGISTRY$SOURCE_GROUP$SOURCE_IMAGE:$SOURCE_VERSION
 
-#USER root
-
 COPY src/rootfs/ /
 
-RUN echo "INFO: begin RUN" ;\
+RUN set -x ;\
+  echo "INFO: begin RUN" ;\
   /sbin/apk add --no-cache \
     git=2.32.0-r0 \
     make=4.3-r0 \
@@ -18,4 +17,3 @@ RUN echo "INFO: begin RUN" ;\
   /bin/busybox --install ;\
   echo "INFO: end RUN"
 
-#USER rootless
