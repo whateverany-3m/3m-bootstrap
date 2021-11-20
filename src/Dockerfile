@@ -12,8 +12,6 @@ RUN set -x ;\
   /sbin/apk add --no-cache \
     git=2.32.0-r0 \
     make=4.3-r0 \
-    busybox=1.33.1-r3 \
   ;\
-  /bin/busybox --install ;\
   echo "INFO: end RUN"
 
